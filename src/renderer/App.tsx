@@ -251,7 +251,7 @@ const VelboAutomobiliCMS: React.FC = () => {
       // @ts-ignore
       const files: Listing[] = await window.electron.readListings(folderPath);
       console.log("Loaded listings:", files.length); // Debug
-      setListings(files);
+      setListings(files.filter(file => file.status === "dostupno"));
     } catch (error) {
       console.error("Error loading listings:", error);
       showNotification("Greška pri učitavanju oglasa", "error");
