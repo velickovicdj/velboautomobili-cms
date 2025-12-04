@@ -1,0 +1,19 @@
+{
+  "name": "velbo-automobili-cms",
+  "version": "1.0.0",
+  "description": "Velbo Automobili CMS",
+  "author": {
+    "name": "Velbo Automobili",
+    "email": "info@velboautomobili.com",
+    "url": "http://velboautomobili.com/"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}
