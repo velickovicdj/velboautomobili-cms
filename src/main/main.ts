@@ -12,6 +12,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import sharp from 'sharp';
+import { SimpleGit, simpleGit } from 'simple-git';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import MenuBuilder from './menu';
@@ -235,8 +236,8 @@ ipcMain.handle(
     try {
       const { listing, images, isEdit } = data;
 
-      const jsonPath = path.join(folderPath, `${listing.id}.json`);
-      const imageFolder = path.join(basePath, 'public', 'vozila', listing.id);
+      const jsonPath = path.join(folderPath, `${listing.slug}.json`)
+      const imageFolder = `${basePath}\\public\\vozila\\${listing.id}`;
 
       await fs.mkdir(imageFolder, { recursive: true });
 
@@ -266,7 +267,16 @@ ipcMain.handle(
         slike: imageNumbers.length ? imageNumbers : listing.slike,
       };
 
+      console.log(jsonPath)
+
       await fs.writeFile(jsonPath, JSON.stringify(updated, null, 2), "utf-8");
+
+      // GIT PUSH
+      // const commitMessage = isEdit 
+      //   ? `Ažuriran oglas: ${listing.marka} ${listing.model}` 
+      //   : `Dodat oglas: ${listing.marka} ${listing.model}`;
+      
+      // await pushToGitHub(basePath, commitMessage);
 
       return { success: true };
     } catch (err: any) {
@@ -277,7 +287,7 @@ ipcMain.handle(
 );
 
 // DELETE LISTING
-ipcMain.handle("delete-listing", async (event, id: string, folderPath: string) => {
+ipcMain.handle("delete-listing", async (event, id: string, folderPath: string, basePath: string) => {
   try {
     console.log(folderPath)
     const jsonPath = path.join(folderPath, `${id}.json`);
@@ -289,15 +299,49 @@ ipcMain.handle("delete-listing", async (event, id: string, folderPath: string) =
     const raw = await fs.readFile(jsonPath, "utf-8");
     const listing = JSON.parse(raw);
 
+    const carName = `${listing.marka} ${listing.model}`;
+
     listing.status = "prodato";
 
     await fs.writeFile(jsonPath, JSON.stringify(listing, null, 2), "utf-8");
+
+    // GIT PUSH
+    await pushToGitHub(basePath, `Obrisan oglas: ${carName}`);
 
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
 });
+
+// GIT OPERATIONS
+const pushToGitHub = async (basePath: string, message: string) => {
+  try {
+    const git: SimpleGit = simpleGit(basePath);
+    
+    // Proveri da li je git repo
+    const isRepo = await git.checkIsRepo();
+    if (!isRepo) {
+      console.log('Not a git repository:', basePath);
+      return { success: false, error: 'Not a git repository' };
+    }
+
+    // Dodaj sve izmene
+    await git.add('.');
+    
+    // Commit
+    await git.commit(message);
+    
+    // Push na trenutni branch
+    await git.push();
+    
+    console.log('Successfully pushed to GitHub:', message);
+    return { success: true };
+  } catch (err: any) {
+    console.error('Git push error:', err);
+    return { success: false, error: err.message };
+  }
+};
 
 // SELECT FOLDER - JEDNOSTAVNO!
 ipcMain.handle("select-data-folder", async () => {

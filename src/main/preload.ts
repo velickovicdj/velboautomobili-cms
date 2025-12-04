@@ -39,14 +39,14 @@ interface SaveListingData {
 interface ElectronAPI {
   readListings: (folderPath: string) => Promise<Listing[]>;
   saveListing: (data: SaveListingData, folderPath: string, basePath: string) => Promise<{ success: boolean; error?: string }>;
-  deleteListing: (id: string, folderPath: string) => Promise<{ success: boolean; error?: string }>;
+  deleteListing: (id: string, folderPath: string, basePath: string) => Promise<{ success: boolean; error?: string }>;
   selectDataFolder: () => Promise<string | null>;
 }
 
 const electronAPI: ElectronAPI = {
   readListings: (folderPath: string) => ipcRenderer.invoke('read-listings', folderPath),
   saveListing: (data, folderPath, basePath) => ipcRenderer.invoke('save-listing', data, folderPath, basePath),
-  deleteListing: (id, folderPath) => ipcRenderer.invoke('delete-listing', id, folderPath),
+  deleteListing: (id, folderPath, basePath) => ipcRenderer.invoke('delete-listing', id, folderPath, basePath),
   selectDataFolder: () => ipcRenderer.invoke('select-data-folder'),
 };
 
