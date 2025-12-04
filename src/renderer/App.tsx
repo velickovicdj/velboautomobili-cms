@@ -91,7 +91,15 @@ const VelboAutomobiliCMS: React.FC = () => {
 
   const [uploadedImages, setUploadedImages] = useState<ImageUpload[]>([]);
 
-  const gorivoOptions = ["Benzin", "Dizel", "Hibrid", "Električni", "TNG", "Benzin + TNG"];
+  const gorivoOptions = [
+    "Benzin", 
+    "Dizel", 
+    "Hibrid", 
+    "Električni", 
+    "TNG", 
+    "Benzin + TNG"
+  ];
+
   const karoserijaOptions = [
     "Limuzina",
     "Hečbek",
@@ -102,7 +110,15 @@ const VelboAutomobiliCMS: React.FC = () => {
     "Monovolumen (MiniVan)",
     "Pickup",
   ];
-  const menjacOptions = ["Manuelni", "Automatski / poluautomatski"];
+
+  const menjacOptions = [
+    "Manuelni",
+    "Manuelni 5 brzina",
+    "Manuelni 6 brzina",
+    "Automatski",
+    "Automatski / poluautomatski"
+  ];
+
   const pogonOptions = ["Prednji pogon", "Zadnji pogon", "4x4 (Pogon na sva četiri točka)"];
 
   const opremaList: string[] = [
@@ -321,7 +337,7 @@ const VelboAutomobiliCMS: React.FC = () => {
         return;
       }
 
-      const slug = editingListing ? editingListing.id : generateSlug(formData.marka, formData.model);
+      const slug = editingListing ? editingListing.slug : generateSlug(formData.marka, formData.model);
       const imageData = uploadedImages.map((img) => ({ data: img.preview, name: img.name }));
 
       const jsonData: Listing = {
@@ -394,13 +410,15 @@ const VelboAutomobiliCMS: React.FC = () => {
       setLoading(true);
       
       const folderPath = getDataFolder();
-      if (!folderPath) {
+      const basePath = getBaseFolder();
+
+      if (!folderPath || !basePath) {
         showNotification("Folder za podatke nije podešen", "error");
         return;
       }
       
       // @ts-ignore
-      const result = await window.electron.deleteListing(listing.slug, folderPath);
+      const result = await window.electron.deleteListing(listing.slug, folderPath, basePath);
 
       if (result.success) {
         showNotification("Oglas obrisan!");
@@ -514,7 +532,7 @@ const VelboAutomobiliCMS: React.FC = () => {
                     <p className="text-gray-600">
                       {listing.godina} • {listing.kilometraza.toLocaleString()} km • {listing.gorivo}
                     </p>
-                    <p className="text-xl font-bold text-blue-600 mt-2">{listing.cena.toLocaleString()} €</p>
+                    <p className="text-xl font-bold text-blue-600 mt-2">{(listing.cena_snizena ?? listing.cena).toLocaleString()} €</p>
                     {listing.istaknuto && (
                       <span className="inline-block bg-yellow-400 text-xs px-2 py-1 rounded mt-2">
                         Istaknuto
