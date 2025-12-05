@@ -41,6 +41,7 @@ interface ElectronAPI {
   saveListing: (data: SaveListingData, folderPath: string, basePath: string) => Promise<{ success: boolean; error?: string }>;
   deleteListing: (id: string, folderPath: string, basePath: string) => Promise<{ success: boolean; error?: string }>;
   selectDataFolder: () => Promise<string | null>;
+  readImage: (imagePath: string) => Promise<string | null>;
 }
 
 const electronAPI: ElectronAPI = {
@@ -48,6 +49,7 @@ const electronAPI: ElectronAPI = {
   saveListing: (data, folderPath, basePath) => ipcRenderer.invoke('save-listing', data, folderPath, basePath),
   deleteListing: (id, folderPath, basePath) => ipcRenderer.invoke('delete-listing', id, folderPath, basePath),
   selectDataFolder: () => ipcRenderer.invoke('select-data-folder'),
+  readImage: (imagePath: string) => ipcRenderer.invoke('read-image', imagePath),
 };
 
 const ipcRendererHandler = {

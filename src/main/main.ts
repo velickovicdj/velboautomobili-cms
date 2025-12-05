@@ -23,6 +23,7 @@ import { resolveHtmlPath } from './util';
 // -----------------------------
 interface Listing {
   id: string;
+  slug: string;
   marka: string;
   model: string;
   godina: number;
@@ -198,6 +199,21 @@ app.on("activate", () => {
 // IPC HANDLERS
 // -----------------------------
 
+ipcMain.handle(
+  "read-image",
+  async (event, imagePath: string): Promise<string | null> => {
+    try {
+      const buffer = await fs.readFile(imagePath);
+      const base64 = buffer.toString('base64');
+      const ext = path.extname(imagePath).slice(1);
+      return `data:image/${ext};base64,${base64}`;
+    } catch (err) {
+      console.error("Error reading image:", err);
+      return null;
+    }
+  }
+);
+
 // READ LISTINGS
 ipcMain.handle("read-listings", async (event, folderPath: string): Promise<Listing[]> => {
   try {
@@ -241,33 +257,38 @@ ipcMain.handle(
 
       await fs.mkdir(imageFolder, { recursive: true });
 
+      let finalImageList: string[] = [];
+
       if (isEdit) {
-        try {
-          const oldImages = await fs.readdir(imageFolder);
-          for (const img of oldImages) {
-            await fs.unlink(path.join(imageFolder, img));
-          }
-        } catch {}
+        // Ako editujemo, sačuvaj postojeće slike iz listing.slike
+        // To su URL-ovi, izvuci samo brojeve
+        finalImageList = listing.slike.map(url => {
+          const match = url.match(/\/(\d+)\.webp$/);
+          return match ? match[1] : url;
+        });
       }
 
-      const imageNumbers: string[] = [];
-      for (let i = 0; i < images.length; i++) {
-        const number = (i + 1).toString();
-        const imagePath = path.join(imageFolder, `${number}.webp`);
+      // Dodaj nove slike na kraj liste
+      if (images.length > 0) {
+        // Počni numerisanje od sledećeg broja
+        const startNumber = finalImageList.length + 1;
+        
+        for (let i = 0; i < images.length; i++) {
+          const number = (startNumber + i).toString();
+          const imagePath = path.join(imageFolder, `${number}.webp`);
 
-        const base64 = images[i].data.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64, "base64");
+          const base64 = images[i].data.replace(/^data:image\/\w+;base64,/, "");
+          const buffer = Buffer.from(base64, "base64");
 
-        await sharp(buffer).webp({ quality: 85 }).toFile(imagePath);
-        imageNumbers.push(number);
+          await sharp(buffer).webp({ quality: 85 }).toFile(imagePath);
+          finalImageList.push(number);
+        }
       }
 
       const updated: Listing = {
         ...listing,
-        slike: imageNumbers.length ? imageNumbers : listing.slike,
+        slike: finalImageList,
       };
-
-      console.log(jsonPath)
 
       await fs.writeFile(jsonPath, JSON.stringify(updated, null, 2), "utf-8");
 
@@ -289,7 +310,6 @@ ipcMain.handle(
 // DELETE LISTING
 ipcMain.handle("delete-listing", async (event, id: string, folderPath: string, basePath: string) => {
   try {
-    console.log(folderPath)
     const jsonPath = path.join(folderPath, `${id}.json`);
 
     if (!fsSync.existsSync(jsonPath)) {

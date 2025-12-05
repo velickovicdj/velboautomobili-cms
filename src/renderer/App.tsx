@@ -55,8 +55,11 @@ interface ImageUpload {
 
 const VelboAutomobiliCMS: React.FC = () => {
   const [listings, setListings] = useState<Listing[]>([]);
-  const [showForm, setShowForm] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<ImageUpload[]>([]);
+  const [listingImages, setListingImages] = useState<Record<string, string>>({});
+  const [showForm, setShowForm] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: string } | null>(null);
 
@@ -89,8 +92,6 @@ const VelboAutomobiliCMS: React.FC = () => {
     slug: ""
   });
 
-  const [uploadedImages, setUploadedImages] = useState<ImageUpload[]>([]);
-
   const gorivoOptions = [
     "Benzin", 
     "Dizel", 
@@ -122,67 +123,136 @@ const VelboAutomobiliCMS: React.FC = () => {
   const pogonOptions = ["Prednji pogon", "Zadnji pogon", "4x4 (Pogon na sva četiri točka)"];
 
   const opremaList: string[] = [
-    "Braniki u boji auta",
-    "Metalik boja",
+    "Metallic boja",
+    "Branici u boji auta",
     "Servo volan",
     "Multifunkcionalni volan",
     "Tempomat",
+    "Adaptivni tempomat",
     "Daljinsko zaključavanje",
-    "Alarm",
     "Centralna brava",
+    "Alarm",
     "Alarmni senzori",
     "Sigurnosna vrata",
     "Immobilizer",
     "ABS",
     "ESP",
     "ASR (Kontrola proklizavanja)",
-    "Blokada motora",
+    "EBD",
+    "BAS",
     "Airbag (Vazdušni jastuci)",
+    "Bočni vazdušni jastuci",
+    "Zavesice vazdušni jastuci",
+    "Knee airbag",
+    "Start-stop sistem",
     "Električni podizači",
     "Električni retrovizori",
+    "Skopivi retrovizori",
+    "Automatski sklopivi retrovizori",
     "Grejači retrovizora",
+    "Grejanje vetrobrana",
     "Tonirana stakla",
+    "Privatna stakla (zatamnjena)",
+    "Grejanje zadnjeg stakla",
     "Klima",
     "Automatska klima",
-    "Dual zona klima",
+    "Dual-zona klima",
+    "Tri-zone klima",
+    "Četiri-zone klima",
     "Putni računar",
-    "Kožni enterier",
-    "Sedišta podesiva po visini",
-    "Elektro podesiva sedišta",
-    "Grejanje sedišta",
-    "Svetla za maglu",
-    "Xenon svetla",
-    "LED prednja svetla",
-    "LED zadnja svetla",
-    "Senzori za svetla",
-    "Senzori za kišu",
-    "Parking senzori",
-    "Kamera",
-    "Aluminijumske felne",
     "Navigacija",
     "Bluetooth",
     "USB",
     "AUX konekcija",
     "Radio CD",
     "MP3",
-    "Ekran na dodir",
+    "CD changer",
     "Android Auto / Apple CarPlay",
-    "Start-stop sistem",
+    "Ekran na dodir",
+    "Multimedija",
+    "Handsfree",
+    "Bežično punjenje telefona",
+    "Sedišta podesiva po visini",
+    "Elektro podesiva sedišta",
+    "Memorija sedišta",
+    "Grejanje sedišta",
+    "Hlađenje sedišta",
+    "Masažna sedišta",
+    "Kožni enterier",
+    "Polukožna sedišta",
+    "Alcantara enterijer",
+    "Kožni volan",
+    "Naslon za ruku",
+    "Naslon za ruku zadnji",
+    "Držači za čaše",
+    "Ostava sa hlađenjem",
+    "Dnevna svetla",
+    "LED prednja svetla",
+    "LED zadnja svetla",
+    "Xenon svetla",
+    "Bi-Xenon",
+    "Matrix LED",
+    "Laser svetla",
+    "Svetla za maglu",
+    "Senzori za svetla",
+    "Senzori za kišu",
+    "Tempomat sa radarom",
+    "Parking senzori napred",
+    "Parking senzori nazad",
+    "360 kamera",
+    "Kamera za vožnju unazad",
+    "Automatsko parkiranje",
+    "Aluminijumske felne",
+    "Čelične felne",
+    "Rezervni točak",
+    "Set za krpljenje gume",
+    "Panoramski krov",
+    "Šiber",
+    "Stakleni krov",
+    "Krovni nosači",
+    "Utičnica 12V",
+    "Utičnica 230V",
     "ISOFIX sistem",
     "DPF filter",
-    "Adaptivni tempomat",
-    "Kožni volan",
-    "Rezervni točak",
-    "Naslon za ruku",
-    "Dnevna svetla",
-    "Ambijentalno osvetljenje",
-    "Utičnica od 12V",
+    "AdBlue sistem",
+    "Elektronska ručna kočnica",
+    "Auto Hold",
+    "Keyless Go",
+    "Keyless Entry",
+    "Remote start",
+    "Limitator brzine",
     "Podešavanje volana po visini",
-    "Ostava sa hlađenjem",
-    "Držači za čaše",
-    "Radio/Kasetofon",
-    "CD changer",
+    "Podešavanje volana po dubini",
+    "Ambijentalno osvetljenje",
+    "Head-Up Display",
+    "Bočni asistenti",
+    "Upozorenje na mrtav ugao",
+    "Upozorenje na napuštanje trake",
+    "Asistencija za zadržavanje trake",
+    "Asistencija za praćenje trake",
+    "Prepoznavanje saobraćajnih znakova",
+    "Automatsko kočenje",
+    "Asistencija za sudar",
+    "Asistencija za nizbrdicu",
+    "Hill Start Assist",
+    "Upozorenje na umor vozača",
+    "Kontrola pritiska u gumama",
+    "Električno otvaranje gepeka",
+    "Električno zatvaranje gepeka",
+    "Handsfree gepek (otvaranje nogom)",
+    "Pneumatsko vešanje",
+    "Sport mod",
+    "Offroad mod",
+    "Auto-prestrojavanje",
+    "Špera diferencijala",
+    "Diferencijal sa ograničenim proklizavanjem",
+    "Kuka za vuču",
+    "Krovni kofer",
+    "Filter kabine (HEPA)",
+    "Pomoć pri vožnji na autoputu",
+    "Pomoć pri vožnji u koloni"
   ];
+
 
   // 1. useEffect za proveru localStorage i inicijalno učitavanje
   useEffect(() => {
@@ -229,6 +299,29 @@ const VelboAutomobiliCMS: React.FC = () => {
       await loadListings();
     });
   }, []);
+
+  // 3. useEffect za učitavanje slika listinga
+  useEffect(() => {
+    const loadListingImages = async () => {
+      const basePath = getBaseFolder();
+      if (!basePath || listings.length === 0) return;
+      
+      const images: Record<string, string> = {};
+      
+      for (const listing of listings) {
+        const imagePath = `${basePath}\\public\\vozila\\${listing.slug}\\${listing.slike[0]}.webp`;
+        // @ts-ignore
+        const base64Data = await window.electron.readImage(imagePath);
+        if (base64Data) {
+          images[listing.slug] = base64Data;
+        }
+      }
+      
+      setListingImages(images);
+    };
+    
+    loadListingImages();
+  }, [listings]);
 
   const getDataFolder = (): string | null => {
     return localStorage.getItem('dataFolderPath');
@@ -279,6 +372,27 @@ const VelboAutomobiliCMS: React.FC = () => {
   const showNotification = (message: string, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    const newImages = [...uploadedImages];
+    const draggedItem = newImages[draggedIndex];
+    newImages.splice(draggedIndex, 1);
+    newImages.splice(index, 0, draggedItem);
+    
+    setUploadedImages(newImages);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -340,6 +454,14 @@ const VelboAutomobiliCMS: React.FC = () => {
       const slug = editingListing ? editingListing.slug : generateSlug(formData.marka, formData.model);
       const imageData = uploadedImages.map((img) => ({ data: img.preview, name: img.name }));
 
+      const newImages = uploadedImages
+        .filter(img => img.file !== null)
+        .map((img) => ({ data: img.preview, name: img.name }));
+      
+      const existingImageNumbers = uploadedImages
+        .filter(img => img.file === null)
+        .map(img => img.name);
+
       const jsonData: Listing = {
         marka: formData.marka,
         model: formData.model,
@@ -363,7 +485,7 @@ const VelboAutomobiliCMS: React.FC = () => {
         broj_vlasnika: Number(formData.broj_vlasnika),
         oprema: formData.oprema,
         opis: formData.opis,
-        slike: editingListing && uploadedImages.length === 0 ? editingListing.slike : [],
+        slike: existingImageNumbers,
         status: formData.status,
         istaknuto: formData.istaknuto,
         id: slug,
@@ -383,7 +505,7 @@ const VelboAutomobiliCMS: React.FC = () => {
       // @ts-ignore
       const result = await window.electron.saveListing({
         listing: jsonData,
-        images: imageData,
+        images: newImages,
         isEdit: !!editingListing,
       }, folderPath, basePath);
 
@@ -434,10 +556,32 @@ const VelboAutomobiliCMS: React.FC = () => {
     }
   };
 
-  const editListing = (listing: Listing) => {
+  const editListing = async (listing: Listing) => {
     setEditingListing(listing);
     setFormData({ ...listing });
-    setUploadedImages([]);
+    
+    const basePath = getBaseFolder();
+    
+    // Učitaj postojeće slike iz lokalnog foldera
+    const existingImages: ImageUpload[] = [];
+    
+    for (let i = 0; i < listing.slike.length; i++) {
+      const slikaUrl = listing.slike[i];
+      const imagePath = `${basePath}\\public\\vozila\\${listing.slug}\\${slikaUrl}.webp`;
+      
+      // @ts-ignore
+      const base64Data = await window.electron.readImage(imagePath);
+      
+      if (base64Data) {
+        existingImages.push({
+          preview: base64Data,
+          file: null as any,
+          name: slikaUrl, // Čuvaj originalni broj umesto 'existing-X'
+        });
+      }
+    }
+    
+    setUploadedImages(existingImages);
     setShowForm(true);
   };
 
@@ -521,8 +665,9 @@ const VelboAutomobiliCMS: React.FC = () => {
                 <div key={listing.id} className="bg-white rounded-lg shadow p-4 flex gap-4">
                   <div className="w-32 h-32 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
                     <img 
-                      src={`https://velboautomobili.com/vozila/${listing.slug}/1.webp`}
+                      src={listingImages[listing.slug] || `https://velboautomobili.com/vozila/${listing.slug}/1.webp`}
                       draggable={false}
+                      alt={`${listing.marka} ${listing.model}`}
                     />
                   </div>
                   <div className="flex-1">
@@ -756,21 +901,37 @@ const VelboAutomobiliCMS: React.FC = () => {
                     <span className="text-sm text-gray-600">Klikni da dodaš slike</span>
                   </label>
                 </div>
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-4 mt-4">
-                    {uploadedImages.map((img, i) => (
-                      <div key={i} className="relative">
-                        <img src={img.preview} alt="" className="w-full h-32 object-cover rounded" />
-                        <button
-                          onClick={() => removeImage(i)}
-                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
-                        >
-                          <X size={16} />
-                        </button>
+              {uploadedImages.length > 0 && (
+                <div className="grid grid-cols-4 gap-4 mt-4">
+                  {uploadedImages.map((img, i) => (
+                    <div 
+                      key={i} 
+                      className={`relative aspect-video cursor-move transition-opacity ${
+                        draggedIndex === i ? 'opacity-50' : 'opacity-100'
+                      }`}
+                      draggable
+                      onDragStart={() => handleDragStart(i)}
+                      onDragOver={(e) => handleDragOver(e, i)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <img 
+                        src={img.preview} 
+                        alt="" 
+                        className="w-full h-full object-cover rounded pointer-events-none" 
+                      />
+                      <div className="absolute top-1 left-1 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
+                        {i + 1}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <button
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               </div>
 
               <div>
