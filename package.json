@@ -163,6 +163,8 @@
     ],
     "mac": {
       "notarize": false,
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
       "target": {
         "target": "default",
         "arch": [
@@ -191,15 +193,13 @@
       ]
     },
     "win": {
-      "target": [
-        "nsis"
-      ]
+      "icon": "assets/icon.ico",
+      "target": ["nsis"]
     },
     "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Development"
+      "icon": "assets/icon.png",
+      "target": ["AppImage", "deb"],
+      "category": "Business"
     },
     "directories": {
       "app": "release/app",
